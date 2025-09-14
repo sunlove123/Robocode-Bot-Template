@@ -1,0 +1,16 @@
+{
+  "name": "{{YourBotName}}",
+  "version": "1.0",
+  "authors": [
+    "{{YourName}}",
+    "{{YourTeamName}}"
+  ],
+  "description": "{{YourTeamDescription}}",
+  "homepage": "",
+  "countryCodes": [
+    "uk",
+    "ind"
+  ],
+  "platform": "JVM",
+  "programmingLang": "Java 11"
+}
