@@ -1,7 +1,6 @@
 import dev.robocode.tankroyale.botapi.*;
 import dev.robocode.tankroyale.botapi.events.*;
 import dev.robocode.tankroyale.botapi.graphics.Color;
-import dev.robocode.*;
 import dev.robocode.tankroyale.botapi.util.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -74,3 +73,4 @@ public class Challengers extends Bot {
         return angle;
     }
 }
+
