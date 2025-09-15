@@ -5,7 +5,7 @@ import dev.robocode.tankroyale.botapi.graphics.Color;
 import dev.robocode.tankroyale.botapi.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Point2D;
+//import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.*;
 import dev.robocode.tankroyale.botapi.events.HitWallEvent;
 
@@ -93,15 +93,27 @@ public class Challengers extends Bot {
     @Override
     public void onScannedBot(ScannedBotEvent e) {
         double distance = distanceTo(e.getX(), e.getY());
-        double firepower = distance < 100 ? 3.0 : 1.5;
+
+        // Dynamic firepower scaling
+        double firepower;
+        if (distance < 100 && getEnergy() > 50) {
+            firepower = 3.0; // Max damage for close-range and high energy
+        } else if (distance < 200 && getEnergy() > 30) {
+            firepower = 2.5;
+        } else if (distance < 300 && getEnergy() > 20) {
+            firepower = 2.0;
+        } else {
+            firepower = 1.0; // Conservative shot for long range or low energy
+        }
 
         // Radar lock
         double angleToEnemy = Math.toDegrees(Math.atan2(e.getX() - getX(), e.getY() - getY()));
         double radarTurn = normalRelativeAngleDegrees(angleToEnemy - getRadarDirection());
         turnRadarRight(radarTurn);
 
-        // Fire only if energy is safe
-        if (getEnergy() > 10 && firepower < getEnergy() / 3) {
+        // Fire only if gun is aligned and energy is sufficient
+        double gunTurn = normalRelativeAngleDegrees(angleToEnemy - getGunDirection());
+        if (Math.abs(gunTurn) < 10 && getEnergy() > firepower * 2) {
             fire(firepower);
         }
 
@@ -110,6 +122,7 @@ public class Challengers extends Bot {
             aggressiveZigzag = true;
         }
     }
+
 
 
     @Override
