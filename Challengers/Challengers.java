@@ -11,6 +11,8 @@ import java.awt.geom.Point2D.*;
 public class Challengers extends Bot {
 
     private int moveDirection = 1;
+    private boolean aggressiveZigzag = false;
+    private boolean evasiveZigzag = false;
 
     public static void main(String[] args) {
         new Challengers().start();
@@ -22,58 +24,69 @@ public class Challengers extends Bot {
 
     @Override
     public void run() {
-        // Bot color setup
         setBodyColor(Color.YELLOW_GREEN);
         setGunColor(Color.RED);
         setRadarColor(Color.YELLOW_GREEN);
 
-        int zigzagAngle = 30; // Angle to zigzag
+        int zigzagAngle = 30;
         boolean zigzagRight = true;
+        boolean aggressiveZigzag = false;
+        boolean evasiveZigzag = false;
 
         while (isRunning()) {
+            // Adjust zigzag based on threat level
+            int currentZigzagAngle = zigzagAngle;
+            if (aggressiveZigzag) currentZigzagAngle = 45;
+            if (evasiveZigzag) currentZigzagAngle = 60;
+
             // Zigzag movement
             if (zigzagRight) {
-                turnRight(zigzagAngle);
+                turnRight(currentZigzagAngle);
             } else {
-                turnLeft(zigzagAngle);
+                turnLeft(currentZigzagAngle);
             }
-            zigzagRight = !zigzagRight; // Alternate direction
+            zigzagRight = !zigzagRight;
 
             forward(100 * moveDirection);
-            turnGunRight(360); // Scan while moving
-            turnRadarRight(360); // Spin radar to scan
+            turnGunRight(360);
+            turnRadarRight(360);
 
-            // Check if close to wall
+            // Wall avoidance
             if (getX() < 100 || getX() > getArenaWidth() - 100 ||
                     getY() < 100 || getY() > getArenaHeight() - 100) {
-                moveDirection *= -1; // Reverse direction
-                back(100); // Move away from wall
+                moveDirection *= -1;
+                back(100);
             }
+
+            // Reset adaptive flags
+            aggressiveZigzag = false;
+            evasiveZigzag = false;
         }
     }
 
     @Override
     public void onScannedBot(ScannedBotEvent e) {
-        // Aim gun at enemy
-        Point2D.Double enemyPos = new Point2D.Double(e.getX(),e.getY());
-       // double angleToTarget = calcBearing(enemyPos);
-      //  turnGunRight(normalRelativeAngleDegrees(angleToTarget - getGunDirection()));
-
-        // Fire with power depending on distance
+        Point2D.Double enemyPos = new Point2D.Double(e.getX(), e.getY());
         double distance = distanceTo(e.getX(), e.getY());
         double firepower = distance < 150 ? 3.0 : 1.5;
 
         if (getEnergy() > 10) {
             fire(firepower);
         }
+
+        // Trigger aggressive zigzag if enemy is close
+        if (distance < 200) {
+            aggressiveZigzag = true;
+        }
     }
 
     @Override
     public void onHitByBullet(HitByBulletEvent e) {
-        // Dodge: turn perpendicular to bullet
         double bulletDir = e.getBullet().getDirection();
         turnLeft(normalRelativeAngleDegrees(bulletDir - getDirection()) + 90);
-        forward(50); // Move away
+        forward(50);
+        // Trigger evasive zigzag when hit
+        evasiveZigzag = true;
     }
 
     // Helper to calculate relative angle
