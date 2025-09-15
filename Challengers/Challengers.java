@@ -52,11 +52,22 @@ public class Challengers extends Bot {
             turnRadarRight(360);
 
             // Wall avoidance
-            if (getX() < 100 || getX() > getArenaWidth() - 100 ||
-                    getY() < 100 || getY() > getArenaHeight() - 100) {
-                moveDirection *= -1;
-                back(100);
+            // Predict next position
+            double nextX = getX() + Math.sin(Math.toRadians(getDirection())) * 100 * moveDirection;
+            double nextY = getY() + Math.cos(Math.toRadians(getDirection())) * 100 * moveDirection;
+
+// If next move risks hitting a wall, adjust heading
+            if (nextX < 80 || nextX > getArenaWidth() - 80 ||
+                    nextY < 80 || nextY > getArenaHeight() - 80) {
+                turnRight(90); // Turn away from wall
+                moveDirection *= -1; // Reverse movement direction
             }
+
+            //if (getX() < 100 || getX() > getArenaWidth() - 100 ||
+              //      getY() < 100 || getY() > getArenaHeight() - 100) {
+                //moveDirection *= -1;
+                //back(100);
+            //}
 
             // Reset adaptive flags
             aggressiveZigzag = false;
