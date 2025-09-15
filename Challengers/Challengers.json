@@ -1,11 +1,11 @@
 {
-  "name": "{{YourBotName}}",
+  "name": "Challengers",
   "version": "1.0",
   "authors": [
-    "{{YourName}}",
-    "{{YourTeamName}}"
+    "Challengers",
+    "Challengers"
   ],
-  "description": "{{YourTeamDescription}}",
+  "description": "RobocodeChallengersTeam",
   "homepage": "",
   "countryCodes": [
     "uk",
