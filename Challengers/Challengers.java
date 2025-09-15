@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.*;
+import dev.robocode.tankroyale.botapi.events.HitWallEvent;
 
 public class Challengers extends Bot {
 
@@ -24,9 +25,9 @@ public class Challengers extends Bot {
 
     @Override
     public void run() {
-        setBodyColor(Color.YELLOW_GREEN);
-        setGunColor(Color.RED);
-        setRadarColor(Color.YELLOW_GREEN);
+        setBodyColor(Color.BLACK);
+        setGunColor(Color.BLACK);
+        setRadarColor(Color.BLACK);
 
         int zigzagAngle = 30;
         boolean zigzagRight = true;
@@ -48,6 +49,7 @@ public class Challengers extends Bot {
             zigzagRight = !zigzagRight;
 
             forward(100 * moveDirection);
+            setTargetSpeed(8);
             turnGunRight(360);
             turnRadarRight(360);
 
@@ -75,6 +77,13 @@ public class Challengers extends Bot {
         }
     }
 
+    public void onHitWall(HitWallEvent e) {
+        // Reverse direction and back off
+        moveDirection *= -1;
+        back(150); // Retreat from wall
+        turnRight(90); // Turn away from wall
+    }
+
     @Override
     public void onScannedBot(ScannedBotEvent e) {
         Point2D.Double enemyPos = new Point2D.Double(e.getX(), e.getY());
@@ -95,7 +104,7 @@ public class Challengers extends Bot {
     public void onHitByBullet(HitByBulletEvent e) {
         double bulletDir = e.getBullet().getDirection();
         turnLeft(normalRelativeAngleDegrees(bulletDir - getDirection()) + 90);
-        forward(50);
+        forward(30);
         // Trigger evasive zigzag when hit
         evasiveZigzag = true;
     }
