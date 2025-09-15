@@ -25,9 +25,9 @@ public class Challengers extends Bot {
 
     @Override
     public void run() {
-        setBodyColor(Color.BLACK);
-        setGunColor(Color.BLACK);
-        setRadarColor(Color.BLACK);
+        setBodyColor(Color.YELLOW_GREEN);
+        setGunColor(Color.RED);
+        setRadarColor(Color.YELLOW_GREEN);
 
         int zigzagAngle = 30;
         boolean zigzagRight = true;
@@ -117,3 +117,4 @@ public class Challengers extends Bot {
         return angle;
     }
 }
+
