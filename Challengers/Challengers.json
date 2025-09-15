@@ -1,0 +1,16 @@
+{
+  "name": "Challengers",
+  "version": "1.0",
+  "authors": [
+    "Challengers",
+    "Challengers"
+  ],
+  "description": "RobocodeChallengersTeam",
+  "homepage": "",
+  "countryCodes": [
+    "uk",
+    "ind"
+  ],
+  "platform": "JVM",
+  "programmingLang": "Java 11"
+}
