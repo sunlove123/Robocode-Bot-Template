@@ -1,6 +1,7 @@
 import dev.robocode.tankroyale.botapi.*;
 import dev.robocode.tankroyale.botapi.events.*;
 import dev.robocode.tankroyale.botapi.graphics.Color;
+//import dev.robocode.*;
 import dev.robocode.tankroyale.botapi.util.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -26,8 +27,18 @@ public class Challengers extends Bot {
         setGunColor(Color.RED);
         setRadarColor(Color.YELLOW_GREEN);
 
+        int zigzagAngle = 30; // Angle to zigzag
+        boolean zigzagRight = true;
+
         while (isRunning()) {
-            // Basic patrol movement
+            // Zigzag movement
+            if (zigzagRight) {
+                turnRight(zigzagAngle);
+            } else {
+                turnLeft(zigzagAngle);
+            }
+            zigzagRight = !zigzagRight; // Alternate direction
+
             forward(100 * moveDirection);
             turnGunRight(360); // Scan while moving
             turnRadarRight(360); // Spin radar to scan
@@ -73,4 +84,3 @@ public class Challengers extends Bot {
         return angle;
     }
 }
-
