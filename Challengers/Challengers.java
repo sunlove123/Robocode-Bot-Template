@@ -10,15 +10,10 @@ import java.awt.geom.Point2D.*;
 import dev.robocode.tankroyale.botapi.events.HitWallEvent;
 
 public class Challengers extends Bot {
+
     private int moveDirection = 1;
     private boolean aggressiveZigzag = false;
     private boolean evasiveZigzag = false;
-    private double lastEnemyEnergy = 100; // Track enemy energy for bullet dodging
-    private long lastFireTime = 0; // Prevent rapid firing
-    private static final int FIRE_COOLDOWN = 3; // Minimum ticks between shots
-    private boolean emergencyEvasion = false;
-    private int evasionCounter = 0;
-    private int stuckCounter=0;
 
     public static void main(String[] args) {
         new Challengers().start();
@@ -36,14 +31,17 @@ public class Challengers extends Bot {
 
         int zigzagAngle = 30;
         boolean zigzagRight = true;
-        boolean aggressiveZigzag = false;
-        boolean evasiveZigzag = false;
 
         while (isRunning()) {
-            // Adjust zigzag based on threat level
+            // Adaptive zigzag angle
             int currentZigzagAngle = zigzagAngle;
             if (aggressiveZigzag) currentZigzagAngle = 45;
             if (evasiveZigzag) currentZigzagAngle = 60;
+
+            // Randomized evasion
+            if (Math.random() < 0.3) {
+                turnRight(Math.random() * 60 - 30); // -30° to +30°
+            }
 
             // Zigzag movement
             if (zigzagRight) {
@@ -52,21 +50,31 @@ public class Challengers extends Bot {
                 turnLeft(currentZigzagAngle);
             }
             zigzagRight = !zigzagRight;
-            forward(100 * moveDirection);
+
+            forward(60 + Math.random() * 40); // 60–100 units
             setTargetSpeed(8);
 
-            turnGunRight(360);
-            turnRadarRight(360);
+            // Radar sweep
+            turnRadarRight(45); // Narrow sweep for faster lock
 
-            // Enhanced wall avoidance with better prediction
-            double nextX = getX() + Math.sin(Math.toRadians(getDirection())) * 120 * moveDirection;
-            double nextY = getY() + Math.cos(Math.toRadians(getDirection())) * 120 * moveDirection;
+            // Predict next position
+            double nextX = getX() + Math.sin(Math.toRadians(getDirection())) * 100 * moveDirection;
+            double nextY = getY() + Math.cos(Math.toRadians(getDirection())) * 100 * moveDirection;
 
-            // Improved wall detection with larger safety margin
-            if (nextX < 100 || nextX > getArenaWidth() - 100 ||
-                    nextY < 100 || nextY > getArenaHeight() - 100) {
-                turnRight(90); // Turn away from wall
-                moveDirection *= -1; // Reverse movement direction
+            // Wall avoidance
+            if (nextX < 80 || nextX > getArenaWidth() - 80 ||
+                    nextY < 80 || nextY > getArenaHeight() - 80) {
+                turnRight(90);
+                moveDirection *= -1;
+            }
+
+            // Corner escape
+            if ((getX() < 120 && getY() < 120) ||
+                    (getX() > getArenaWidth() - 120 && getY() < 120) ||
+                    (getX() < 120 && getY() > getArenaHeight() - 120) ||
+                    (getX() > getArenaWidth() - 120 && getY() > getArenaHeight() - 120)) {
+                turnRight(135);
+                back(100);
             }
 
             // Reset adaptive flags
@@ -76,131 +84,41 @@ public class Challengers extends Bot {
     }
 
     public void onHitWall(HitWallEvent e) {
-        // Emergency wall escape maneuver
-        emergencyEvasion = true;
-        evasionCounter = 0;
-
-        // Reverse direction and back off with randomness
+        // Reverse direction and back off
         moveDirection *= -1;
-        back(200); // Move further back from wall
-
-        // Sharp turn away from wall with randomness
-        double turnAngle = 90 + (Math.random() * 90); // Turn between 90-180 degrees
-        turnRight(turnAngle);
-
-        // Reset stuck counter
-        stuckCounter = 0;
+        back(150); // Retreat from wall
+        turnRight(90); // Turn away from wall
     }
 
     @Override
     public void onScannedBot(ScannedBotEvent e) {
-        Point2D.Double enemyPos = new Point2D.Double(e.getX(), e.getY());
-        double distance = calcDistance(e.getX(), e.getY(), getX(), getY());
+        double distance = distanceTo(e.getX(), e.getY());
+        double firepower = distance < 100 ? 3.0 : 1.5;
 
-        // Improved targeting with basic lead calculation
-        double enemyHeading = e.getDirection();
+        // Radar lock
+        double angleToEnemy = Math.toDegrees(Math.atan2(e.getX() - getX(), e.getY() - getY()));
+        double radarTurn = normalRelativeAngleDegrees(angleToEnemy - getRadarDirection());
+        turnRadarRight(radarTurn);
 
-        double enemyVelocity = 100;
-
-        // Simple predictive targeting
-        double bulletSpeed = 20 - (3 * calculateOptimalFirepower(distance));
-        double timeToTarget = distance / bulletSpeed;
-
-        // Predict enemy future position
-        double futureX = e.getX() + Math.sin(Math.toRadians(enemyHeading)) * enemyVelocity * timeToTarget;
-        double futureY = e.getY() + Math.cos(Math.toRadians(enemyHeading)) * enemyVelocity * timeToTarget;
-
-        // Calculate angle to future position
-        double angleToFuture = Math.toDegrees(Math.atan2(futureX - getX(), futureY - getY()));
-        double gunTurnNeeded = normalRelativeAngleDegrees(angleToFuture - getGunDirection());
-
-        // Turn gun towards predicted position
-        turnGunRight(gunTurnNeeded);
-
-        // Smart firing with energy management and cooldown
-        double firepower = calculateOptimalFirepower(distance);
-        long currentTime = getTimeLeft();
-
-                if (Math.abs(gunTurnNeeded) < 15 &&
-                getEnergy() > firepower * 3 &&
-                currentTime - lastFireTime >= FIRE_COOLDOWN &&
-                shouldFireAtEnemy(distance));
-{ // Smart firing logic
-
+        // Fire only if energy is safe
+        if (getEnergy() > 10 && firepower < getEnergy() / 3) {
             fire(firepower);
-            lastFireTime = currentTime;
         }
 
-        // Enhanced movement adaptation
+        // Trigger aggressive zigzag if enemy is close
         if (distance < 200) {
             aggressiveZigzag = true;
         }
-
-        // Detect if enemy fired (energy drop) and trigger evasion
-        double energyDrop = lastEnemyEnergy - e.getEnergy();
-        if (energyDrop >= 0.1 && energyDrop <= 3.0) {
-            // Enemy likely fired, trigger evasive maneuvers
-            evasiveZigzag = true;
-            // Change direction unpredictably
-            if (Math.random() > 0.5) {
-                moveDirection *= -1;
-            }
-        }
-        lastEnemyEnergy = e.getEnergy();
     }
+
 
     @Override
     public void onHitByBullet(HitByBulletEvent e) {
         double bulletDir = e.getBullet().getDirection();
-
-        // More sophisticated evasion - perpendicular movement
-        double perpendicularAngle = bulletDir + 90;
-        if (Math.random() > 0.5) {
-            perpendicularAngle = bulletDir - 90;
-        }
-
-        turnRight(normalRelativeAngleDegrees(perpendicularAngle - getDirection()));
-        forward(50);
-
+        turnLeft(normalRelativeAngleDegrees(bulletDir - getDirection()) + 90);
+        forward(30);
         // Trigger evasive zigzag when hit
         evasiveZigzag = true;
-    }
-
-    /**
-     * Calculate distance between two points
-     */
-    private double calcDistance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    }
-
-    /**
-     * Calculate optimal firepower based on distance and energy considerations
-     */
-    private double calculateOptimalFirepower(double distance) {
-        if (distance < 100) {
-            return getEnergy() > 50 ? 3.0 : 2.0; // High power for close targets
-        } else if (distance < 300) {
-            return getEnergy() > 30 ? 2.0 : 1.5; // Medium power for medium range
-        } else {
-            return getEnergy() > 20 ? 1.5 : 1.0; // Low power for distant targets
-        }
-    }
-
-    /**
-     * Determine if we should fire at the enemy based on various factors
-     */
-    private boolean shouldFireAtEnemy(double distance) {
-        // Don't fire if enemy is too far (likely to miss)
-        if (distance > 400) {
-            return false;
-        }
-
-        // Don't fire if we're low on energy and enemy is far
-        if (getEnergy() < 20 && distance > 200) {
-            return false;
-        }
-
-        return true;
     }
 
     // Helper to calculate relative angle
