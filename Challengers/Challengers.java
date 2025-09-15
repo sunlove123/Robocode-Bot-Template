@@ -97,13 +97,13 @@ public class Challengers extends Bot {
         // Dynamic firepower scaling
         double firepower;
         if (distance < 100 && getEnergy() > 50) {
-            firepower = 3.0; // Max damage for close-range and high energy
+            firepower = 1.0; // Max damage for close-range and high energy
         } else if (distance < 200 && getEnergy() > 30) {
-            firepower = 2.5;
+            firepower = 0.75;
         } else if (distance < 300 && getEnergy() > 20) {
-            firepower = 2.0;
+            firepower = 0.5;
         } else {
-            firepower = 1.0; // Conservative shot for long range or low energy
+            firepower = 0; // Conservative shot for long range or low energy
         }
 
         // Radar lock
@@ -142,3 +142,4 @@ public class Challengers extends Bot {
         return angle;
     }
 }
+
