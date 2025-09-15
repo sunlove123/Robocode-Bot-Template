@@ -99,7 +99,7 @@ public class Challengers extends Bot {
 
         // Improved targeting with basic lead calculation
         double enemyHeading = e.getDirection();
-        
+
         double enemyVelocity = 100;
 
         // Simple predictive targeting
@@ -119,7 +119,7 @@ public class Challengers extends Bot {
 
         // Smart firing with energy management and cooldown
         double firepower = calculateOptimalFirepower(distance);
-        long currentTime = getTurnRate(0);
+        long currentTime = getTimeLeft();
 
                 if (Math.abs(gunTurnNeeded) < 15 &&
                 getEnergy() > firepower * 3 &&
