@@ -88,7 +88,7 @@ public class Challengers extends Bot {
     public void onScannedBot(ScannedBotEvent e) {
         Point2D.Double enemyPos = new Point2D.Double(e.getX(), e.getY());
         double distance = distanceTo(e.getX(), e.getY());
-        double firepower = distance < 150 ? 3.0 : 1.5;
+        double firepower = distance < 100 ? 3.0 : 1.5;
 
         if (getEnergy() > 10) {
             fire(firepower);
@@ -117,4 +117,5 @@ public class Challengers extends Bot {
         return angle;
     }
 }
+
 
